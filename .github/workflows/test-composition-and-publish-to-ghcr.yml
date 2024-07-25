@@ -1,7 +1,9 @@
 name: test-composition-and-publish-to-ghcr
 
-on: [push]
-
+on: 
+  workflow_dispatch:
+  push:
+    
 env:
   GHCR_PAT: ${{ secrets.GHCR_PAT }}
   CONFIGURATION_VERSION: "v0.0.2"
