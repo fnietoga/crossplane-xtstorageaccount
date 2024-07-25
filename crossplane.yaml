@@ -1,0 +1,24 @@
+apiVersion: meta.pkg.crossplane.io/v1
+kind: Configuration
+metadata:
+  name: crossplane-xtstorageaccount
+  annotations:
+    # Set the annotations defining the maintainer, source, license, and description of your Configuration
+    meta.crossplane.io/maintainer: Francisco Nieto iam@fnietoga.me
+    meta.crossplane.io/source: github.com/fnietoga/crossplane-xtstorageaccount
+    # Set the license of your Configuration
+    meta.crossplane.io/license: Apache-2.0
+    meta.crossplane.io/description: |
+      Crossplane configuration delivering CRDs to provision Azure Storage Account with some specific governance rules and conventions.
+    meta.crossplane.io/readme: |
+      Featuring a Composition with Azure storage account and some additional resources (private endpoint, key vault for outputs) and specific configuration (naming convention, etc.)
+spec:
+  # (Optional) Set the minimum version of Crossplane that this Configuration is compatible with
+  crossplane:
+    version: ">=v1.14.1-0"
+  # Add your dependencies here
+  dependsOn:
+    - provider: xpkg.upbound.io/upbound/provider-azure-storage
+      version: ">=v1.4.0"
+    - function: xpkg.upbound.io/crossplane-contrib/function-patch-and-transform
+      version: "v0.6.0"

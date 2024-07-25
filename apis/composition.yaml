@@ -1,0 +1,259 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xtstorageaccount-composition
+  labels:
+    # An optional convention is to include a label of the XRD. This allows
+    # easy discovery of compatible Compositions.
+    crossplane.io/xrd: xxtstorageaccounts.crossplane.fnietoga.me
+    # The following label marks this Composition for AWS. This label can
+    # be used in 'compositionSelector' in an XR or Claim.
+    provider: azure
+spec:
+  # Each Composition must declare that it is compatible with a particular type
+  # of Composite Resource using its 'compositeTypeRef' field. The referenced
+  # version must be marked 'referenceable' in the XRD that defines the XR.
+  compositeTypeRef:
+    apiVersion: crossplane.fnietoga.me/v1alpha1
+    kind: xXtStorageAccount
+
+  # When an XR is created in response to a claim Crossplane needs to know where
+  # it should create the XR's connection secret. This is configured using the
+  # 'writeConnectionSecretsToNamespace' field.
+  writeConnectionSecretsToNamespace: crossplane-system
+
+  # Decouple patch & transform logic using patch-and-transform function in pipeline mode
+  mode: Pipeline
+  pipeline:
+    - step: patch-and-transform-resources
+      functionRef:
+        name: function-patch-and-transform
+      input:
+        apiVersion: pt.fn.crossplane.io/v1beta1
+        kind: Resources
+
+        # First define some common patches, stored in environment fields, that will be applied to all resources
+        # Also validate the input parameters and process default valuesfor optional parameters.
+        environment:            
+          patches:
+            ###Required with basic transforms
+            #### location 
+            - type: ToEnvironmentFieldPath
+              fromFieldPath: spec.parameters.location
+              toFieldPath: location
+              transforms:
+                - type: string
+                  string:
+                    type: Convert
+                    convert: "ToLower"
+              policy: 
+                fromFieldPath: Required
+
+            #### environment 
+            - type: ToEnvironmentFieldPath
+              fromFieldPath: spec.parameters.environment
+              toFieldPath: environment
+              transforms:
+                - type: string
+                  string:
+                    type: Convert
+                    convert: "ToLower"
+              policy: 
+                fromFieldPath: Required
+              
+            #### projectName
+            - type: ToEnvironmentFieldPath
+              fromFieldPath: spec.parameters.projectName
+              toFieldPath: projectName
+              transforms:
+                - type: string
+                  string:
+                    type: Convert
+                    convert: "ToLower"
+              policy: 
+                fromFieldPath: Required
+
+            #### resourceGroupName
+            - type: ToEnvironmentFieldPath
+              fromFieldPath: spec.parameters.resourceGroupName
+              toFieldPath: resourceGroupName
+              transforms:
+                - type: string
+                  string:
+                    type: Convert
+                    convert: "ToUpper"
+              policy: 
+                fromFieldPath: Required
+
+            ###Optional with basic transforms and default values
+            #### sequentialNumber
+            - type: ToEnvironmentFieldPath
+              fromFieldPath: spec.parameters.sequentialNumber
+              toFieldPath: sequentialNumber
+              transforms:
+                - type: convert
+                  convert:
+                    toType: string
+                - type: string
+                  string:
+                    type: Format
+                    fmt: "%02s"
+
+            ###Shortened values from map
+            #### locationShort
+            - type: ToEnvironmentFieldPath
+              fromFieldPath: spec.parameters.location
+              toFieldPath: locationShort
+              transforms:
+                - type: map
+                  map:
+                    westeurope: "we"
+                    northeurope: "ne"
+                    eastus2: "eu"
+                    centralus: "cu"
+                    australiaeast: "ea"
+                    australiacentral: "ca"
+                    global: "gl"
+
+            #### environmentShort
+            - type: ToEnvironmentFieldPath
+              fromFieldPath: spec.parameters.environment
+              toFieldPath: environmentShort
+              transforms:
+                - type: map
+                  map:
+                    production: "p"
+                    staging: "s"
+                    preproduction: "e"
+                    quality_assurance: "q"
+                    test: "t"
+                    development: "d"
+                    proof_of_concept: "c"
+                    disaster_recovery: "r"
+                    sandbox: "c"
+                    global: "a"
+
+        # If you find yourself repeating patches a lot you can group them as a named
+        # 'patch set' then use a PatchSet type patch to reference them.
+        # see https://docs.crossplane.io/v1.12/concepts/composition/#compositions
+        patchSets:
+        - name: globalLabelsPatchSet
+          patches:
+            ### metadata.labels
+            #### projectName
+            - type: FromEnvironmentFieldPath 
+              fromFieldPath: projectName
+              toFieldPath: metadata.labels["projectName"]              
+            #### environment
+            - type: FromEnvironmentFieldPath
+              fromFieldPath: environment
+              toFieldPath: metadata.labels["environment"]
+            #### resourceGroupName
+            - type: FromEnvironmentFieldPath
+              fromFieldPath: resourceGroupName
+              toFieldPath: metadata.labels["resourceGroupName"]
+
+        # Each Composition must specify at least one composed resource template.
+        resources:
+          # Providing a unique name for each entry is good practice.
+          # Only identifies the resources entry within the Composition. Required in future crossplane API versions.
+          - name: storageaccount
+            base:
+              # see https://marketplace.upbound.io/providers/upbound/provider-azure-storage/v1.4.0/resources/storage.azure.upbound.io/Account/v1beta1
+              apiVersion: storage.azure.upbound.io/v1beta1
+              kind: Account
+              metadata: {}
+              spec:
+                managementPolicy: FullControl ##TODO: Test OrphanOnDelete of other solutions for production environments
+                initProvider: #for fields that are required on creation, but we do not desire to update them after creation
+                  accountTier: Standard
+                forProvider:
+                  allowNestedItemsToBePublic: false
+                  defaultToOauthAuthentication: true
+                  localUserEnabled: false
+                  enableHttpsTrafficOnly: true
+                  minTlsVersion: TLS1_2
+                  sftpEnabled: false
+
+            patches:
+              ### metadata.name
+              - type: CombineFromEnvironment
+                combine:
+                  strategy: string
+                  variables:
+                    - fromFieldPath: locationShort
+                    - fromFieldPath: environmentShort
+                    - fromFieldPath: projectName
+                    - fromFieldPath: sequentialNumber
+                  string:
+                    fmt: "st-%s-%s-%s-%s"
+                toFieldPath: metadata.name
+              
+              ### metadata.labels
+              - type: PatchSet
+                patchSetName: globalLabelsPatchSet
+
+              ### spec
+              #### spec.providerConfigRef.name
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.projectName                    
+                toFieldPath: spec.providerConfigRef.name
+                transforms:
+                  - type: string
+                    string:
+                      type: Format
+                      fmt: "%s-umi"
+                  - type: string
+                    string:
+                      type: Convert
+                      convert: "ToLower"
+
+              #### spec.initProvider
+              ##### accountReplicationType
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.replicationType
+                toFieldPath: spec.initProvider.accountReplicationType
+              ##### accountKind
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.kind
+                toFieldPath: spec.initProvider.accountKind
+              ##### resourceGroupName
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.resourceGroupName
+                toFieldPath: spec.initProvider.resourceGroupName
+                transforms:
+                  - type: string
+                    string:
+                      type: Convert
+                      convert: "ToUpper"
+              ##### location
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.location
+                toFieldPath: spec.initProvider.location
+                transforms:
+                  - type: string
+                    string:
+                      type: Convert
+                      convert: "ToLower"
+
+              #### spec.forProvider
+              ##### accessTier
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.accessTier
+                toFieldPath: spec.forProvider.accessTier
+              ##### sharedAccessKeyEnabled
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.sharedAccessKeyEnabled
+                toFieldPath: spec.forProvider.sharedAccessKeyEnabled
+              ##### isHnsEnabled
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.hnsEnabled
+                toFieldPath: spec.forProvider.isHnsEnabled
+              ##### largeFileShareEnabled
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.largeFileShareEnabled
+                toFieldPath: spec.forProvider.largeFileShareEnabled
+
+    - step: automatically-detect-ready-composed-resources
+      functionRef:
+        name: function-auto-ready
