@@ -3,6 +3,9 @@ name: test-composition-and-publish-to-ghcr
 on: 
   workflow_dispatch:
   push:
+    paths:
+      - 'apis/**'
+      - 'crossplane.yaml'      
     
 env:
   GHCR_PAT: ${{ secrets.GHCR_PAT }}
