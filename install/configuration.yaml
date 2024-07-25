@@ -1,0 +1,6 @@
+apiVersion: pkg.crossplane.io/v1
+kind: Configuration
+metadata:
+  name: crossplane-xtstorageaccount
+spec:
+  package: ghcr.io/fnietoga/crossplane-xtstorageaccount:v0.0.2
