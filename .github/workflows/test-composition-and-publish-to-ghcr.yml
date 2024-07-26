@@ -53,11 +53,15 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
+      # This currently gives an error: Failed to download Crossplane CLI. Please make sure version current exists on channel stable.
+      # curl -sL "https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh" |sh
+      # So using manual download, see https://docs.crossplane.io/latest/cli/
+      # Also using curl with --output crank to prevent error: Failed to create the file crossplane: Is a directory (since crossplane is a directory also)
       - name: Install Crossplane CLI
         run: |
-          curl --output crossplane "https://releases.crossplane.io/stable/current/bin/linux_amd64/crank"
-          chmod +x crossplane
-          sudo mv crossplane /usr/local/bin/crossplane
+          curl --output crank "https://releases.crossplane.io/stable/current/bin/linux_amd64/crank"
+          chmod +x crank
+          sudo mv crank /usr/local/bin/crossplane
       
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
