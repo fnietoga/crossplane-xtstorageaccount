@@ -1,0 +1,12 @@
+apiVersion: azure.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: testapp01-umi
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: crossplane-system
+      name: testapp01-umi
+      key: creds
+    

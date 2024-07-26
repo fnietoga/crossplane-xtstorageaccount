@@ -6,7 +6,7 @@ metadata:
     # An optional convention is to include a label of the XRD. This allows
     # easy discovery of compatible Compositions.
     crossplane.io/xrd: xxtstorageaccounts.crossplane.fnietoga.me
-    # The following label marks this Composition for AWS. This label can
+    # The following label marks this Composition for Azure. This label can
     # be used in 'compositionSelector' in an XR or Claim.
     provider: azure
 spec:
@@ -164,7 +164,7 @@ spec:
               kind: Account
               metadata: {}
               spec:
-                managementPolicy: FullControl ##TODO: Test OrphanOnDelete of other solutions for production environments
+                #managementPolicy: FullControl ##TODO: Test OrphanOnDelete of other solutions for production environments
                 initProvider: #for fields that are required on creation, but we do not desire to update them after creation
                   accountTier: Standard
                 forProvider:
@@ -186,7 +186,7 @@ spec:
                     - fromFieldPath: projectName
                     - fromFieldPath: sequentialNumber
                   string:
-                    fmt: "st-%s-%s-%s-%s"
+                    fmt: "st%s%s%s%s"
                 toFieldPath: metadata.name
               
               ### metadata.labels
@@ -217,15 +217,6 @@ spec:
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.kind
                 toFieldPath: spec.initProvider.accountKind
-              ##### resourceGroupName
-              - type: FromCompositeFieldPath
-                fromFieldPath: spec.parameters.resourceGroupName
-                toFieldPath: spec.initProvider.resourceGroupName
-                transforms:
-                  - type: string
-                    string:
-                      type: Convert
-                      convert: "ToUpper"
               ##### location
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.location
@@ -237,6 +228,15 @@ spec:
                       convert: "ToLower"
 
               #### spec.forProvider
+              ##### resourceGroupName
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.resourceGroupName
+                toFieldPath: spec.forProvider.resourceGroupName
+                transforms:
+                  - type: string
+                    string:
+                      type: Convert
+                      convert: "ToUpper"
               ##### accessTier
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.parameters.accessTier

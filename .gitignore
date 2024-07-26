@@ -1,2 +1,13 @@
 # Don't check in Configuration packages
 *.xpkg
+
+# Don't check temporary kind logs or kubeconfig files
+kubeconfig
+kind-logs-*
+
+# Exclude Helm charts lock and packages
+**/**/charts
+**/**/Chart.lock
+
+##local azure cred files
+**/**/azure-creds.*

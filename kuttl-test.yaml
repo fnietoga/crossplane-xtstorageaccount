@@ -1,0 +1,24 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestSuite
+timeout: 300 # We definitely need a higher timeout for the external AWS resources to become available
+commands:
+  # Install crossplane via Helm Renovate enabled (see https://stackoverflow.com/a/71765472/4964553)
+  - command: helm dependency update crossplane/install
+  - command: helm upgrade --install crossplane --namespace crossplane-system crossplane/install --create-namespace --wait
+
+  # Install the crossplane Upbound Functions
+  - command: kubectl apply -f crossplane/provider/upbound-functions.yaml
+  # Install the crossplane Upbound Azure Storage Provider Family
+  - command: kubectl apply -f crossplane/provider/upbound-provider-azure-storage.yaml
+  # Wait until Azure Provider is up and running
+  - command: kubectl wait --for=condition=healthy --timeout=180s provider/upbound-provider-azure-storage
+
+  # Create Azure Provider secret (pre-deleting it to prevent errors like this while re-using the kuttl kind cluster)
+  - command: kubectl delete secret testapp01-umi -n crossplane-system --ignore-not-found
+  - command: kubectl create secret generic testapp01-umi -n crossplane-system --from-file=creds=./azure-creds.json
+  # Create ProviderConfig to consume the Secret containing Azure credentials
+  - command: kubectl apply -f crossplane/provider/provider-config-azure.yaml
+testDirs:
+  - tests/e2e/
+startKIND: true
+kindContext: crossplane-test

@@ -21,7 +21,7 @@ spec:
   # default Composition when none is specified (must match metadata.name of a provided Composition)
   # e.g. in composition.yaml
   defaultCompositionRef:
-    name: storageaccount-composition
+    name: xtstorageaccount-composition
 
   versions:
   - name: v1alpha1
@@ -29,8 +29,6 @@ spec:
     served: true
     # Indicates which version of the schema Compositions use. Only one version can be referenceable
     referenceable: true
-    # One and only one version must be marked as the storage version.
-    storage: true
     # OpenAPI schema (like the one used by Kubernetes CRDs). Determines what fields
     # the XR (and claim) will have. Will be automatically extended by crossplane.
     # See https://kubernetes.io/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions/

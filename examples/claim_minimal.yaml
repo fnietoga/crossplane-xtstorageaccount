@@ -4,18 +4,18 @@ apiVersion: crossplane.fnietoga.me/v1alpha1
 kind: XtStorageAccount
 metadata:
   # Only claims are namespaced, unlike XRs.
-  namespace: tests
+  namespace: default
   name: storage-account-minimal
 spec:
   # The compositionRef specifies which Composition this XR will use to compose
   # resources when it is created, updated, or deleted.
   compositionRef:
-    name: XtStorageAccount-minimalparams
+    name: xtstorageaccount-composition
   
   # Parameters for the Composition to provide the Managed Resources (MR) with
   # to create the actual infrastructure components
   parameters:
-    resourceGroupName: RG-WE-D-TESTAPP-01
+    resourceGroupName: RG-WE-D-TESTAPP-02
     location: westeurope
     environment: development
     projectName: testapp02
