@@ -20,7 +20,7 @@ jobs:
       - name: Run Composition rendering & Integration tests as described in https://www.codecentric.de/wissens-hub/blog/testing-crossplane-compositions-kuttl
         run: echo "Run tests here!"
 
-  run-kuttl:
+  kuttl-tests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -47,7 +47,7 @@ jobs:
           kubectl kuttl test
           
   build-configuration-and-publish-to-ghcr:
-    needs: composition-rendering-test
+    needs: [composition-rendering-test,kuttl-tests]
     runs-on: ubuntu-latest
 
     steps:
