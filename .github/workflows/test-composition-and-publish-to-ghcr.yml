@@ -5,7 +5,8 @@ on:
   push:
     paths:
       - 'apis/**'
-      - 'crossplane.yaml'      
+      - 'crossplane.yaml'
+      - '.github/workflows/**'
     
 env:
   AZURE_CREDS_JSON: ${{ secrets.AZURE_CREDS_JSON }}
@@ -73,7 +74,7 @@ jobs:
       - name: Build Crossplane Configuration package & publish it to GitHub Container Registry
         run: |
           echo "### Build Configuration .xpkg file"
-          crossplane xpkg build -f . -e "./examples" --ignore=".github/workflows/*,install/*" --verbose
+          crossplane xpkg build -f . -e "./examples" --ignore=".github/**/*,crossplane/**/*,tests/e2e/**/*,kuttl-test.yaml" --verbose
 
           echo "### Publish as OCI image to GHCR"
           crossplane xpkg push "ghcr.io/fnietoga/crossplane-xtstorageaccount:$CONFIGURATION_VERSION" --domain=https://ghcr.io --verbose
