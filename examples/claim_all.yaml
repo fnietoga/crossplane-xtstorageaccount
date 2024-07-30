@@ -20,9 +20,9 @@ spec:
     environment: development
     projectName: testapp01
     sequentialNumber: 3
-    replicationType: "LRS"
-    kind: "BlobStorage"
-    accessTier: "Cool"
+    replicationType: LRS
+    kind: BlobStorage
+    accessTier: Cool
     sharedAccessKeyEnabled: true
     hnsEnabled: true
     largeFileShareEnabled: false

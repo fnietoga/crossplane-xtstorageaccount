@@ -19,3 +19,4 @@ spec:
     location: westeurope
     environment: development
     projectName: testapp02
+    sharedAccessKeyEnabled: true

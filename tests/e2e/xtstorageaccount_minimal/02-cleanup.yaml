@@ -1,0 +1,5 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+commands:      
+  # Cleanup Azure resources
+  - command: kubectl delete -f ../../../examples/claim_minimal.yaml

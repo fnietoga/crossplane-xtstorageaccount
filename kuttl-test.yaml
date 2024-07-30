@@ -14,8 +14,8 @@ commands:
   - command: kubectl wait --for=condition=healthy --timeout=180s provider/upbound-provider-azure-storage
 
   # Create Azure Provider secret (pre-deleting it to prevent errors like this while re-using the kuttl kind cluster)
-  - command: kubectl delete secret testapp01-umi -n crossplane-system --ignore-not-found
-  - command: kubectl create secret generic testapp01-umi -n crossplane-system --from-file=creds=./azure-creds.json
+  - command: kubectl delete secret testapp -n crossplane-system --ignore-not-found
+  - command: kubectl create secret generic testapp -n crossplane-system --from-file=creds=./azure-creds.json
   # Create ProviderConfig to consume the Secret containing Azure credentials
   - command: kubectl apply -f crossplane/provider/provider-config-azure.yaml
 testDirs:

@@ -1,0 +1,7 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestStep
+commands:
+  # Create the XR/Claim
+  - command: kubectl apply -f ../../../examples/claim_minimal.yaml
+  # Wait for Resource to become fully available before proceeding
+  - script: ../wait-resource.sh -g 'crossplane.fnietoga.me' -t 'XtStorageAccount' -n 'storage-account-minimal'

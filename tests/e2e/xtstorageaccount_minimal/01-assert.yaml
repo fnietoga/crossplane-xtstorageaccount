@@ -1,0 +1,57 @@
+apiVersion: kuttl.dev/v1beta1
+kind: TestAssert
+timeout: 30 # override test suite's long timeout again to have fast results in assertion
+collectors:
+# Clean up Azure resources if something goes wrong, see https://kuttl.dev/docs/testing/reference.html#collectors
+- type: command
+  command: kubectl delete -f ../../../examples/claim_minimal.yaml
+---
+apiVersion: storage.azure.upbound.io/v1beta1
+kind: Account
+metadata:
+  labels:
+    environment: development
+    projectName: testapp02
+    resourceGroupName: RG-WE-D-TESTAPP-02
+  name: stwedtestapp0201
+spec:
+  forProvider:
+    accessTier: Hot
+    allowNestedItemsToBePublic: false
+    defaultToOauthAuthentication: true
+    enableHttpsTrafficOnly: true
+    isHnsEnabled: false
+    largeFileShareEnabled: false
+    localUserEnabled: false
+    minTlsVersion: TLS1_2
+    resourceGroupName: RG-WE-D-TESTAPP-02
+    sftpEnabled: false
+    sharedAccessKeyEnabled: true
+  initProvider:
+    accountKind: StorageV2
+    accountReplicationType: ZRS
+    accountTier: Standard
+    location: westeurope
+  providerConfigRef:
+    name: testapp02-umi
+---
+apiVersion: crossplane.fnietoga.me/v1alpha1
+kind: XtStorageAccount
+metadata:
+  name: storage-account-minimal
+  namespace: default
+spec:
+  compositionRef:
+    name: xtstorageaccount-composition
+  parameters:
+    accessTier: Hot
+    environment: development
+    hnsEnabled: false
+    kind: StorageV2
+    largeFileShareEnabled: false
+    location: westeurope
+    projectName: testapp02
+    replicationType: ZRS
+    resourceGroupName: RG-WE-D-TESTAPP-02
+    sequentialNumber: 1
+    sharedAccessKeyEnabled: true
